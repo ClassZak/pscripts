@@ -79,9 +79,11 @@ class DebugUploadHandler(http.server.SimpleHTTPRequestHandler):
 			temp_file.write(body)
 			print(f'Raw body saved to {temp_file.name}')
 
-		# Parse multipart MIME message from the request body
+		# Build a proper MIME message by prepending the Content-Type header
+		# (email.parser expects a full RFC message with headers)
+		full_message = b'Content-Type: ' + content_type.encode() + b'\r\n\r\n' + body
 		try:
-			msg = email.message_from_bytes(body, policy=email.policy.default)
+			msg = email.message_from_bytes(full_message, policy=email.policy.default)
 		except Exception as e:
 			self.send_error(400, f'Invalid multipart data: {e}')
 			return
